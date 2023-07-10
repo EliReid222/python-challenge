@@ -1,20 +1,35 @@
-import pandas as pd
+import csv
 import os
 
 csv_file = os.path.join("Resources", "budget_data.csv")
 
-#read CSV file, count the months, and calculate the total $$
-budget_df = pd.read_csv(csv_file)
-total_months = budget_df.shape[0]
-total = budget_df["Profit/Losses"].sum()
+#count the months, track changes, and dates
+total_months = 0
+total = 0
+changes = []
+dates = []
 
-#calculations of max, min, average, greatest increase, and decrease
-budget_df["Change"] = budget_df["Profit/Losses"].diff()
-average = budget_df["Change"].mean()
-greatest_increase = budget_df["Change"].max()
-greatest_decrease = budget_df["Change"].min()
-greatest_increase_date = budget_df.loc[budget_df["Change"] == greatest_increase, "Date"].item()
-greatest_decrease_date = budget_df.loc[budget_df["Change"] == greatest_decrease, "Date"].item()
+#open CSV file
+with open(csv_file, 'r') as file:
+    reader = csv.DictReader(file)
+
+    #identify rows
+    for row in reader:
+        date = row["Date"]
+        profit_loss = int(row["Profit/Losses"])
+
+        total_months += 1
+        total += profit_loss
+        changes.append(profit_loss)
+        dates.append(date)
+
+#calculate average, greatest increase and decrease
+change_total = sum(changes[i] - changes[i-1] for i in range(1, len(changes)))
+average = change_total / (total_months - 1)
+greatest_increase = max(changes)
+greatest_decrease = min(changes)
+greatest_increase_date = dates[changes.index(greatest_increase)]
+greatest_decrease_date = dates[changes.index(greatest_decrease)]
 
 #output definition
 output = [
