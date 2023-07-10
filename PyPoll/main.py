@@ -1,23 +1,41 @@
-import pandas as pd
+import csv
 import os
 
 #find CSV file
 csv_file = os.path.join("Resources", "election_data.csv")
 
-#read CSV and count total votes
-election_df = pd.read_csv(csv_file)
-total_votes = election_df.shape[0]
+#count total votes
+total_votes = 0
+votes_per_candidate = {}
 
-#ballot count
-votes_per_candidate = election_df.groupby("Candidate").size()
+#open CSV file
+with open(csv_file, 'r') as file:
+    reader = csv.reader(file)
+    header = next(reader)  
 
-#percentage of votes
-percentage_votes = (votes_per_candidate / total_votes) * 100
+    #identify the rows
+    for row in reader:
+        candidate = row[2] 
+        total_votes += 1
+        votes_per_candidate[candidate] = votes_per_candidate.get(candidate, 0) + 1
+
+#calculate percentage of votes
+percentage_votes = {}
+for candidate, votes in votes_per_candidate.items():
+    percentage = (votes / total_votes) * 100
+    percentage_votes[candidate] = percentage
 
 #winner winner
-winner = votes_per_candidate.idxmax()
+winner_votes = 0
+winner = ""
 
-#ottput define
+for candidate, votes in votes_per_candidate.items():
+    if votes > winner_votes:
+        winner_votes = votes
+        winner = candidate
+
+
+#output definition
 output = [
     "Election Results",
     "-------------------------",
@@ -25,9 +43,10 @@ output = [
     "-------------------------",
 ]
 
-#append
+#results
 for candidate, votes in votes_per_candidate.items():
-    output.append(f"{candidate}: {percentage_votes[candidate]:.3f}% ({votes})")
+    percentage = percentage_votes[candidate]
+    output.append(f"{candidate}: {percentage:.3f}% ({votes})")
 
 output.extend([
     "-------------------------",
